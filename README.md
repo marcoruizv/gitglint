@@ -8,7 +8,7 @@ No build step. No server. No install. Just one `.html` file.
 
 ## What it is
 
-GitGlint is a lightweight content editor that talks directly to the GitHub API. It's designed for writers and developers who manage markdown content in a Git repository — blog posts, docs, notes, and more.
+GitGlint is a lightweight content editor that talks directly to the GitHub API. It's designed for writers and developers who manage markdown content in a Git repository — blog posts, docs, notes, etc, - and want a clean editing interface without touching a code editor or the (mostly useless) GitHub web UI.
 
 It works on desktop and mobile, supports light and dark themes, and is very portable.
 
@@ -19,10 +19,10 @@ Please feel free to fork the repository if you wish to make your own modificatio
 
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0;">
-  <img src="assets/gitglint_init.png" alt="GitGlint init" style="width: 100%; height: auto;">
-  <img src="assets/gitglint_ui.png" alt="GitGlint UI" style="width: 100%; height: auto;">
-  <img src="assets/gitglint_ui2.png" alt="GitGlint UI 2" style="width: 100%; height: auto;">
-  <img src="assets/gitglint_editor.png" alt="GitGlint editor" style="width: 100%; height: auto;">
+  <img src="assets/gitglint_init.png" alt="GitGlint init" style="width: 20%; height: auto;">
+  <img src="assets/gitglint_ui.png" alt="GitGlint UI" style="width: 20%; height: auto;">
+  <img src="assets/gitglint_ui2.png" alt="GitGlint UI 2" style="width: 20%; height: auto;">
+  <img src="assets/gitglint_editor.png" alt="GitGlint editor" style="width: 20%; height: auto;">
 </div>
 
 ---
