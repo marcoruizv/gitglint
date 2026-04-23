@@ -8,7 +8,7 @@ No build step. No server. No install. Just one `.html` file.
 
 ## What it is
 
-GitGlint is a lightweight content editor that talks directly to the GitHub API. It's designed for writers and developers who manage markdown content in a Git repository — blog posts, docs, notes, anything text-based — and want a clean editing interface without touching a code editor or the GitHub web UI.
+GitGlint is a lightweight content editor that talks directly to the GitHub API. It's designed for writers and developers who manage markdown content in a Git repository — blog posts, docs, notes, and more.
 
 It works on desktop and mobile, supports light and dark themes, and is very portable.
 
@@ -18,7 +18,12 @@ GitGlint is a personal utility provided "as-is". To maintain its minimalist phil
 Please feel free to fork the repository if you wish to make your own modifications.
 
 
-![](assets/gitglint_init.png) ![](assets/gitglint_ui.png) ![](assets/gitglint_ui2.png) ![](assets/gitglint_editor.png)  
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0;">
+  <img src="assets/gitglint_init.png" alt="GitGlint init" style="width: 100%; height: auto;">
+  <img src="assets/gitglint_ui.png" alt="GitGlint UI" style="width: 100%; height: auto;">
+  <img src="assets/gitglint_ui2.png" alt="GitGlint UI 2" style="width: 100%; height: auto;">
+  <img src="assets/gitglint_editor.png" alt="GitGlint editor" style="width: 100%; height: auto;">
+</div>
 
 ---
 
@@ -27,7 +32,7 @@ Please feel free to fork the repository if you wish to make your own modificatio
 1. **Download** `GitGlint.html` and open it in any modern browser, or host it anywhere (GitHub Pages, Netlify, a local server — even `file://` works).
 2. **Create a Fine-Grained Personal Access Token** with `repo` read/write scope at [github.com/settings/personal-access-tokens](https://github.com/settings/personal-access-tokens).
 3. On first launch, enter your **PAT**, **owner** (GitHub username or org), and **repository name**, then click **Connect Repository**.
-  - [Optional] Activate quasi-CMS mode by providing the path to where your content resides. This is useful if updating content for an Astro-based blog for example. Use syntax `label:path/to/markdown/files`. Toggle from settings.
+   - [Optional] Activate quasi-CMS mode by providing the path to where your content resides. This is useful if updating content for an Astro-based blog for example. Use syntax `label:path/to/markdown/content`, separated by commas for multiple paths.
 5. Your repo's file tree loads in the sidebar. Click any file to open it.
 
 ---
@@ -154,7 +159,7 @@ All loaded from CDN — no local install required.
 
 ## Meta 🤖
 
-​GitGlint was built as an experiment in AI-collaborative development. The core logic and architecture were co-authored with AI to demonstrate a high-velocity, single-file deployment workflow. It is provided as-is, representing a "frozen" moment of that collaboration. 
+GitGlint was built as an experiment in AI-collaborative development. The core logic and architecture were co-authored with AI to demonstrate a high-velocity, single-file deployment workflow. It was built entirely in Claude, with all logic written in a single chat session.
 
 This is a tool built using a LLM, all in a chat-interface, for personal use but making it public in case anyone wants to use it.
 
