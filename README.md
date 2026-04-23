@@ -12,6 +12,10 @@ GitGlint is a lightweight content editor that talks directly to the GitHub API. 
 
 It works on desktop and mobile, supports light and dark themes, and is very portable.
 
+**Project Status: As-Is**
+GitGlint is a completed, personal utility provided "as-is". To maintain its minimalist philosophy and keep the project low-maintenance, I am not accepting Issues or Pull Requests.
+Please feel free to fork the repository if you wish to make your own modifications.
+
 ---
 
 ## Getting started
@@ -143,6 +147,13 @@ All loaded from CDN — no local install required.
 - Binary files (PDFs, fonts, etc.) are not editable, though images are viewable.
 
 ---
+
+​🤖 Meta
+​GitGlint was built as an experiment in AI-collaborative development. The core logic and architecture were co-authored with AI to demonstrate a high-velocity, single-file deployment workflow. It is provided as-is, representing a "frozen" moment of that collaboration. 
+
+This is a tool built using a LLM, all in a chat-interface, for personal use but making it public in case anyone wants to use it.
+
+--- 
 
 ## License
 
