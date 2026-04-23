@@ -13,8 +13,12 @@ GitGlint is a lightweight content editor that talks directly to the GitHub API. 
 It works on desktop and mobile, supports light and dark themes, and is very portable.
 
 **Project Status: As-Is**
-GitGlint is a completed, personal utility provided "as-is". To maintain its minimalist philosophy and keep the project low-maintenance, I am not accepting Issues or Pull Requests.
+
+GitGlint is a personal utility provided "as-is". To maintain its minimalist philosophy and keep the project low-maintenance, I am not accepting Issues or Pull Requests.
 Please feel free to fork the repository if you wish to make your own modifications.
+
+
+![](assets/gitglint_init.png) ![](assets/gitglint_ui.png) ![](assets/gitglint_ui2.png) ![](assets/gitglint_editor.png)  
 
 ---
 
