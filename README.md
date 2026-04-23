@@ -158,4 +158,4 @@ This is a tool built using a LLM, all in a chat-interface, for personal use but 
 
 ## License
 
-MIT
+This project is licensed under the MIT License. It is provided without warranty of any kind. See the LICENSE file for full details.
