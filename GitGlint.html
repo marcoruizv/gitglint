@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GitGlint">
+<meta id="theme-color-meta" name="theme-color" content="#F5F3EE">
+<title>GitGlint</title>
+<link id="pwa-manifest" rel="manifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F5F3EE;--surface:#FDFCF9;--sidebar:#EEEAE1;
+  --border:#DDD8CE;--border2:#E8E4DA;
+  --text:#1A1917;--muted:#7A736C;--muted2:#A8A19A;
+  --accent:#C06B2A;--accent-light:#FEF0E4;--accent-dark:#A05522;
+  --success:#3B7D52;--danger:#C23B3B;
+  --shadow:0 1px 3px rgba(0,0,0,.07),0 4px 14px rgba(0,0,0,.05);
+  --r:8px;--font:'Figtree',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+[data-theme=dark]{
+  --bg:#131210;--surface:#1C1B18;--sidebar:#171614;
+  --border:#2A2824;--border2:#242220;
+  --text:#EEE9E0;--muted:#8A8278;--muted2:#5C5650;
+  --accent:#D97B38;--accent-light:#251508;--accent-dark:#E88C4A;
+  --success:#4D9668;--danger:#D95050;
+}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow:hidden}
+#root{height:100dvh;display:flex;flex-direction:column}
+
+/* ── Layout ── */
+.layout{display:flex;flex:1;overflow:hidden}
+.sidebar{width:262px;flex-shrink:0;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--surface);min-width:0}
+
+/* ── Sidebar pieces ── */
+.s-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.logo{font-family:'Fraunces',Georgia,serif;font-size:18px;font-style:italic;font-weight:300;color:var(--accent);letter-spacing:-.01em}
+.s-repo{padding:8px 16px;font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid var(--border)}
+.s-section{display:flex;flex-direction:column;border-bottom:1px solid var(--border)}
+.s-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2);padding:10px 16px 6px;display:flex;align-items:center;justify-content:space-between}
+.s-scroll{flex:1;overflow-y:auto;overflow-x:hidden}
+.s-scroll::-webkit-scrollbar{width:3px}
+.s-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ── File items ── */
+.f-item{display:flex;align-items:center;gap:7px;padding:5px 16px;cursor:pointer;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;user-select:none}
+.f-item:hover{background:rgba(0,0,0,.04)}
+[data-theme=dark] .f-item:hover{background:rgba(255,255,255,.04)}
+.f-item.active{background:var(--accent-light);color:var(--accent)}
+.f-name{overflow:hidden;text-overflow:ellipsis;flex:1}
+.f-ext{font-family:var(--mono);font-size:9px;opacity:.45;flex-shrink:0}
+
+.f-del{opacity:0;transition:opacity .12s;pointer-events:none}
+.f-item:hover .f-del{opacity:1;pointer-events:auto}
+.f-item.active .f-del{opacity:.6;pointer-events:auto}
+
+/* ── CMS mode ── */
+.cms-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:8px;font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;background:var(--accent-light);color:var(--accent);border:1px solid var(--accent);line-height:1.4}
+.cms-tabs{display:flex;gap:4px;padding:8px 12px;flex-shrink:0;overflow-x:auto;border-bottom:1px solid var(--border)}
+.cms-tabs::-webkit-scrollbar{display:none}
+.cms-tab{padding:3px 10px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-family:var(--mono);cursor:pointer;white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
+.cms-tab.on{background:var(--accent-light);color:var(--accent);border-color:var(--accent)}
+/* Toggle switch */
+.sw{position:relative;width:38px;height:22px;flex-shrink:0;cursor:pointer;display:inline-block}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw-track{position:absolute;inset:0;border-radius:11px;background:var(--border);transition:background .2s}
+.sw input:checked+.sw-track{background:var(--accent)}
+.sw-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s;pointer-events:none}
+.sw input:checked~.sw-thumb{transform:translateX(16px)}
+.sw-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;user-select:none;transition:border-color .15s}
+.sw-row:hover{border-color:var(--accent)}
+
+.breadcrumb{display:flex;align-items:center;gap:3px;padding:6px 16px;font-size:11px;font-family:var(--mono);color:var(--muted);overflow:hidden;background:var(--sidebar);border-bottom:1px solid var(--border2);flex-shrink:0}
+.bc-item{cursor:pointer;white-space:nowrap}
+.bc-item:hover{color:var(--text)}
+.bc-sep{opacity:.35}
+
+/* ── Branch items ── */
+.b-item{display:flex;align-items:center;gap:8px;padding:5px 16px;cursor:pointer;font-size:12px;font-family:var(--mono);overflow:hidden;color:var(--muted);white-space:nowrap;text-overflow:ellipsis}
+.b-item:hover{background:rgba(0,0,0,.04)}
+[data-theme=dark] .b-item:hover{background:rgba(255,255,255,.04)}
+.b-item.active{color:var(--accent)}
+.b-dot{width:6px;height:6px;border-radius:50%;background:var(--muted2);flex-shrink:0}
+.b-item.active .b-dot{background:var(--accent)}
+
+/* ── Editor header ── */
+.e-head{padding:10px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.e-path{font-family:var(--mono);font-size:11px;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dirty{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
+
+/* ── Toolbar ── */
+.toolbar{display:flex;align-items:center;gap:2px;padding:6px 14px;border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0}
+.toolbar::-webkit-scrollbar{display:none}
+.tb{display:flex;align-items:center;justify-content:center;min-width:28px;height:26px;padding:0 4px;border-radius:5px;border:none;background:none;color:var(--muted);cursor:pointer;font-family:var(--mono);font-size:11px;font-weight:500;transition:background .1s,color .1s;flex-shrink:0;white-space:nowrap}
+.tb:hover{background:var(--border);color:var(--text)}
+.tb-sep{width:1px;height:14px;background:var(--border);margin:0 3px;flex-shrink:0}
+.v-toggle{display:flex;gap:1px;margin-left:auto;background:var(--border);border-radius:6px;padding:2px;flex-shrink:0}
+.vb{padding:3px 9px;border-radius:4px;border:none;background:none;color:var(--muted);cursor:pointer;font-size:11px;font-weight:500;font-family:var(--font);transition:background .1s,color .1s;white-space:nowrap}
+.vb.on{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+
+/* ── Editor body ── */
+.e-body{flex:1;display:flex;overflow:hidden}
+.e-pane,.p-pane{flex:1;overflow-y:auto;height:100%}
+.e-pane{border-right:1px solid var(--border)}
+.e-pane.solo{border-right:none}
+textarea.ta{width:100%;height:100%;padding:32px 36px;font-family:var(--font);font-size:15px;line-height:1.8;border:none;background:transparent;color:var(--text);resize:none;outline:none;display:block}
+.p-inner{padding:32px 36px;max-width:700px}
+
+/* ── Markdown preview ── */
+.p-inner h1,.p-inner h2,.p-inner h3,.p-inner h4{margin:1.4em 0 .5em;font-weight:600;line-height:1.25}
+.p-inner h1{font-size:1.9em}.p-inner h2{font-size:1.45em}.p-inner h3{font-size:1.2em}
+.p-inner p{margin-bottom:.9em}.p-inner a{color:var(--accent);text-decoration:none}
+.p-inner a:hover{text-decoration:underline}
+.p-inner code{font-family:var(--mono);font-size:.85em;background:var(--border);padding:2px 5px;border-radius:3px}
+.p-inner pre{background:var(--sidebar);border:1px solid var(--border);border-radius:var(--r);padding:16px;overflow-x:auto;margin-bottom:1em}
+.p-inner pre code{background:none;padding:0;font-size:.85em}
+.p-inner blockquote{border-left:3px solid var(--accent);padding-left:16px;color:var(--muted);margin:1em 0}
+.p-inner img{max-width:100%;border-radius:var(--r);margin:.5em 0}
+.p-inner ul,.p-inner ol{padding-left:1.5em;margin-bottom:.9em}
+.p-inner li{margin-bottom:.2em}
+.p-inner hr{border:none;border-top:1px solid var(--border);margin:2em 0}
+.p-inner table{width:100%;border-collapse:collapse;margin-bottom:1em;font-size:.93em}
+.p-inner th,.p-inner td{border:1px solid var(--border);padding:7px 12px;text-align:left}
+.p-inner th{background:var(--sidebar);font-weight:600}
+
+/* ── Empty state ── */
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted);padding:40px;text-align:center}
+.empty svg{opacity:.2;margin-bottom:4px}
+.empty-t{font-size:15px;font-weight:500;color:var(--text)}
+.empty-s{font-size:13px}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r);border:none;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:opacity .15s,background .15s}
+.btn:disabled{opacity:.45;pointer-events:none}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-dark)}
+.btn-ghost{background:transparent;color:var(--text)}
+.btn-ghost:hover{background:var(--border)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.ib{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:var(--r);border:none;background:none;color:var(--muted);cursor:pointer;transition:background .1s,color .1s;flex-shrink:0}
+.ib:hover{background:var(--border);color:var(--text)}
+.ib-sm{width:22px;height:22px;border-radius:5px}
+
+/* ── FAB ── */
+.fab{position:fixed;bottom:calc(env(safe-area-inset-bottom)+76px);right:20px;width:50px;height:50px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.22);transition:transform .15s,opacity .15s;z-index:80}
+.fab:hover{transform:scale(1.05)}
+/* Commit pill shown in mobile header instead of FAB */
+.m-commit{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:20px;background:var(--accent);color:#fff;border:none;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;white-space:nowrap;flex-shrink:0}
+.m-commit:active{background:var(--accent-dark)}
+
+/* ── Bottom Nav ── */
+.bnav{display:none;position:fixed;bottom:0;left:0;right:0;height:calc(56px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--surface);border-top:1px solid var(--border);z-index:70}
+.bnav-inner{display:flex;height:56px}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:var(--muted);font-size:10px;font-family:var(--font);font-weight:500;cursor:pointer;transition:color .1s;padding:0}
+.bnav-btn.on{color:var(--accent)}
+
+/* ── Mobile header ── */
+.m-head{display:none;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+
+/* ── Drawer ── */
+.dr-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:120;backdrop-filter:blur(1px)}
+.dr-overlay.on{display:block}
+.drawer{position:fixed;top:0;left:0;bottom:0;width:282px;background:var(--sidebar);z-index:121;transform:translateX(-100%);transition:transform .24s ease;display:flex;flex-direction:column;overflow:hidden}
+.drawer.on{transform:translateX(0)}
+
+/* ── Modal ── */
+.m-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:200;backdrop-filter:blur(2px)}
+@media(min-width:600px){.m-overlay{align-items:center}}
+.modal{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-height:92dvh;overflow-y:auto;padding:24px;animation:slideUp .2s ease}
+@media(min-width:600px){.modal{border-radius:16px;max-width:460px;width:100%}}
+@keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.m-title{font-size:16px;font-weight:600;margin-bottom:18px}
+.m-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+
+/* ── Form ── */
+.fg{margin-bottom:14px}
+.fl{display:block;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.fi{width:100%;padding:9px 11px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-family:var(--font);font-size:14px;color:var(--text);outline:none;transition:border-color .15s}
+.fi:focus{border-color:var(--accent)}
+select.fi{cursor:pointer}
+.fh{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* ── Setup ── */
+.setup{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
+.setup-card{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;box-shadow:var(--shadow)}
+.setup-h{text-align:center;margin-bottom:28px}
+.setup-logo{font-family:'Fraunces',Georgia,serif;font-size:36px;font-style:italic;font-weight:300;color:var(--accent)}
+.setup-sub{font-size:13px;color:var(--muted);margin-top:6px}
+
+/* ── Upload ── */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--r);padding:32px 20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:var(--accent-light)}
+.upload-preview{max-width:100%;max-height:180px;border-radius:var(--r);margin:12px auto 0;display:block}
+
+/* ── Spinner ── */
+.spin{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:rot .65s linear infinite;flex-shrink:0}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:calc(env(safe-area-inset-bottom)+128px);left:50%;transform:translateX(-50%);padding:9px 18px;border-radius:24px;font-size:13px;font-weight:500;z-index:400;white-space:nowrap;pointer-events:none;animation:tin 2.8s ease forwards}
+.toast.ok{background:var(--success);color:#fff}
+.toast.err{background:var(--danger);color:#fff}
+.toast.info{background:var(--text);color:var(--bg)}
+@keyframes tin{0%{opacity:0;transform:translateX(-50%) translateY(8px)}12%{opacity:1;transform:translateX(-50%) translateY(0)}78%{opacity:1}100%{opacity:0}}
+
+/* ── Misc ── */
+.row{display:flex;gap:10px}
+.col{flex:1}
+.ml-a{margin-left:auto}
+.gap4{gap:4px}
+.err-msg{color:var(--danger);font-size:13px;margin-bottom:14px}
+.tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500;background:var(--accent-light);color:var(--accent)}
+hr.sep{border:none;border-top:1px solid var(--border);margin:12px 0}
+
+/* ── Responsive ── */
+@media(max-width:767px){
+  .sidebar{display:none}
+  .m-head{display:flex}
+  .bnav{display:block}
+  .fab{display:none}
+  .main{padding-bottom:56px}
+  textarea.ta{padding:20px 16px;font-size:16px}
+  .p-inner{padding:20px 16px}
+  .e-head{padding:10px 14px}
+  .toolbar{padding:6px 10px}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons@4.29.0/dist/feather.min.js"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons@4.29.0/dist/feather.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback,useLayoutEffect,useMemo}=React;
+
+// ─── Icons ───────────────────────────────────────────────────────────────────
+
+function FI({name,size=16,className='',style={}}){
+  const svg=window.feather?.icons?.[name]?.toSvg({width:size,height:size,'stroke-width':1.8});
+  if(!svg)return<span style={{width:size,height:size,display:'inline-block'}} />;
+  return<span className={className} style={{display:'inline-flex',alignItems:'center',lineHeight:0,...style}} dangerouslySetInnerHTML={{__html:svg}}/>;
+}
+
+// ─── GitHub API ───────────────────────────────────────────────────────────────
+
+function mkGH(pat,owner,repo){
+  const BASE='https://api.github.com';
+  const H={'Authorization':`token ${pat}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'};
+  async function api(path,opts={}){
+    const r=await fetch(`${BASE}${path}`,{headers:H,...opts});
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.message||`HTTP ${r.status}`);}
+    return r.json();
+  }
+  return{
+    getRepo:()=>api(`/repos/${owner}/${repo}`),
+    getBranches:()=>api(`/repos/${owner}/${repo}/branches?per_page=100`),
+    getContents:(path,ref)=>api(`/repos/${owner}/${repo}/contents/${encodeURI(path)}${ref?`?ref=${encodeURIComponent(ref)}`:''}`),
+    getRef:(branch)=>api(`/repos/${owner}/${repo}/git/ref/heads/${encodeURIComponent(branch)}`),
+    createBranch:(name,sha)=>api(`/repos/${owner}/${repo}/git/refs`,{method:'POST',body:JSON.stringify({ref:`refs/heads/${name}`,sha})}),
+    saveFile:(path,msg,content,sha,branch)=>{
+      const body={message:msg,content:btoa(unescape(encodeURIComponent(content))),branch};
+      if(sha)body.sha=sha;
+      return api(`/repos/${owner}/${repo}/contents/${encodeURI(path)}`,{method:'PUT',body:JSON.stringify(body)});
+    },
+    uploadBinary:(path,b64,msg,branch)=>api(`/repos/${owner}/${repo}/contents/${encodeURI(path)}`,{method:'PUT',body:JSON.stringify({message:msg,content:b64,branch})}),
+    deleteFile:(path,msg,sha,branch)=>api(`/repos/${owner}/${repo}/contents/${encodeURI(path)}`,{method:'DELETE',body:JSON.stringify({message:msg,sha,branch})}),
+    deleteBranch:async(name)=>{
+      const r=await fetch(`${BASE}/repos/${owner}/${repo}/git/refs/heads/${encodeURIComponent(name)}`,{method:'DELETE',headers:H});
+      if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.message||`HTTP ${r.status}`);}
+    },
+  };
+}
+
+// ─── Utils ────────────────────────────────────────────────────────────────────
+
+const LS={
+  get:k=>{try{return JSON.parse(localStorage.getItem(k))}catch{return null}},
+  set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)),
+  del:k=>localStorage.removeItem(k),
+};
+
+function b64dec(s){return decodeURIComponent(escape(atob(s.replace(/\s/g,''))))}
+
+function insertMD(text,s,e,before,after=''){
+  const sel=text.slice(s,e);
+  const next=text.slice(0,s)+before+sel+after+text.slice(e);
+  return{text:next,cs:s+before.length,ce:s+before.length+sel.length};
+}
+
+function isMD(n){return/\.(md|mdx|markdown)$/i.test(n)}
+function isImg(n){return/\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i.test(n)}
+function isText(n){return/\.(txt|json|ya?ml|toml|html?|css|[jt]sx?|astro|svelte|vue|xml)$/i.test(n)||isMD(n)}
+function rawURL(owner,repo,branch,path){return`https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`}
+function slug(s){return s.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')}
+
+// Parse "Label:path/to/dir, other/path" → [{label,path},…]
+// Falls back to last path segment as label when no Label: prefix is given
+function parseCmsPaths(str){
+  return(str||'').split(',').map(s=>{
+    const t=s.trim();if(!t)return null;
+    const ci=t.indexOf(':');
+    if(ci>0&&!t.slice(0,ci).includes('/'))
+      return{label:t.slice(0,ci).trim(),path:t.slice(ci+1).trim()};
+    return{label:t.split('/').filter(Boolean).pop()||t,path:t};
+  }).filter(Boolean);
+}
+
+function defaultFrontmatter(name){
+  const title=name.replace(/\.mdx?$/i,'').replace(/[-_]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  const date=new Date().toISOString().split('T')[0];
+  return`---\ntitle: "${title}"\ndate: ${date}\ndraft: true\ndescription: ""\n---\n\n# ${title}\n\n`;
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+
+function Toast({message,type,onDone}){
+  useEffect(()=>{const t=setTimeout(onDone,2800);return()=>clearTimeout(t)},[]);
+  const cls=type==='success'?'ok':type==='error'?'err':'info';
+  return<div className={`toast ${cls}`}>{message}</div>;
+}
+
+// ─── Setup ────────────────────────────────────────────────────────────────────
+
+function Setup({onSave}){
+  const[pat,setPat]=useState('');
+  const[owner,setOwner]=useState('');
+  const[repo,setRepo]=useState('');
+  const[cmsMode,setCmsMode]=useState(false);
+  const[cmsPaths,setCmsPaths]=useState('');
+  const[busy,setBusy]=useState(false);
+  const[err,setErr]=useState('');
+
+  async function connect(e){
+    e.preventDefault();
+    if(!pat||!owner||!repo)return;
+    setBusy(true);setErr('');
+    try{
+      await mkGH(pat,owner,repo).getRepo();
+      onSave({pat,owner,repo,imgPath:'public/images',cmsMode,cmsPaths});
+    }catch(ex){setErr(ex.message||'Connection failed. Check your credentials.');}
+    finally{setBusy(false);}
+  }
+
+  return(
+    <div className="setup">
+      <div className="setup-card">
+        <div className="setup-h">
+          <div className="setup-logo">GitGlint</div>
+          <div className="setup-sub">Git-based content editor</div>
+        </div>
+
+        <div className="fg">
+          <label className="fl">GitHub Personal Access Token</label>
+          <input className="fi" type="password" value={pat} onChange={e=>setPat(e.target.value)} placeholder="ghp_…" autoComplete="off"/>
+          <div className="fh">Needs <code>repo</code> read/write scope. <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener" style={{color:'var(--accent)'}}>Create one ↗</a></div>
+        </div>
+
+        <div className="row">
+          <div className="fg col">
+            <label className="fl">Owner</label>
+            <input className="fi" value={owner} onChange={e=>setOwner(e.target.value)} placeholder="username"/>
+          </div>
+          <div className="fg" style={{flex:2}}>
+            <label className="fl">Repository</label>
+            <input className="fi" value={repo} onChange={e=>setRepo(e.target.value)} placeholder="my-blog"/>
+          </div>
+        </div>
+
+        <hr className="sep"/>
+
+        <div className="fg" style={{marginBottom:cmsMode?10:0}}>
+          <div className="sw-row" onClick={()=>setCmsMode(v=>!v)}>
+            <div>
+              <div style={{fontSize:13,fontWeight:500,display:'flex',alignItems:'center',gap:7}}>
+                <FI name="edit-3" size={13} style={{opacity:.6}}/>CMS Mode
+              </div>
+              <div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>Show only your content folders, hide everything else</div>
+            </div>
+            <label className="sw" onClick={e=>e.stopPropagation()}>
+              <input type="checkbox" checked={cmsMode} onChange={e=>setCmsMode(e.target.checked)}/>
+              <div className="sw-track"/>
+              <div className="sw-thumb"/>
+            </label>
+          </div>
+        </div>
+        {cmsMode&&(
+          <div className="fg">
+            <label className="fl">Content paths</label>
+            <input className="fi" value={cmsPaths} onChange={e=>setCmsPaths(e.target.value)}
+              placeholder="Posts:content/posts, Pages:content/pages" autoFocus/>
+            <div className="fh">Comma-separated. Optional labels: <code style={{fontFamily:'var(--mono)'}}>Posts:content/posts</code></div>
+          </div>
+        )}
+
+        {err&&<div className="err-msg">{err}</div>}
+        <button className="btn btn-primary" style={{width:'100%',justifyContent:'center',marginTop:cmsMode?0:4}} onClick={connect} disabled={busy||!pat||!owner||!repo}>
+          {busy?<><div className="spin"/>&nbsp;Connecting…</>:<><FI name="git-branch" size={14}/>Connect Repository</>}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── File Tree ────────────────────────────────────────────────────────────────
+
+function FileTree({gh,branch,path,setPath,openPath,onOpen,onDeleteFile,treeVersion}){
+  const[items,setItems]=useState([]);
+  const[busy,setBusy]=useState(false);
+  const parts=path?path.split('/'):[]; 
+
+  useEffect(()=>{
+    if(!branch)return;
+    setBusy(true);
+    gh.getContents(path||'',branch)
+      .then(d=>{
+        const arr=Array.isArray(d)?d:[d];
+        arr.sort((a,b)=>a.type===b.type?a.name.localeCompare(b.name):a.type==='dir'?-1:1);
+        setItems(arr);
+      })
+      .catch(()=>setItems([]))
+      .finally(()=>setBusy(false));
+  },[branch,path,treeVersion]);
+
+  function goUp(){const p=[...parts];p.pop();setPath(p.join('/'))}
+  function goTo(i){setPath(parts.slice(0,i+1).join('/'))}
+
+  return(
+    <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      <div className="breadcrumb">
+        <span className="bc-item" onClick={()=>setPath('')}>~</span>
+        {parts.map((p,i)=>(
+          <React.Fragment key={i}>
+            <span className="bc-sep">/</span>
+            <span className="bc-item" onClick={()=>goTo(i)}>{p}</span>
+          </React.Fragment>
+        ))}
+      </div>
+      <div className="s-scroll">
+        {path&&(
+          <div className="f-item" onClick={goUp}>
+            <FI name="corner-left-up" size={13} style={{opacity:.5}}/>
+            <span className="f-name" style={{color:'var(--muted)'}}>…</span>
+          </div>
+        )}
+        {busy&&<div style={{padding:'14px',textAlign:'center'}}><div className="spin" style={{margin:'0 auto'}}/></div>}
+        {!busy&&items.map(item=>(
+          <div key={item.path} className={`f-item${openPath===item.path?' active':''}`}
+            onClick={()=>{
+              if(item.type==='dir')setPath(item.path);
+              else if(isText(item.name)||isImg(item.name))onOpen(item);
+            }}>
+            <FI name={item.type==='dir'?'folder':isMD(item.name)?'file-text':isImg(item.name)?'image':'file'} size={13} style={{opacity:.6,flexShrink:0}}/>
+            <span className="f-name">{item.name}</span>
+            {isMD(item.name)&&<span className="f-ext">md</span>}
+            {item.type!=='dir'&&onDeleteFile&&(
+              <button className="ib ib-sm f-del" title="Delete file"
+                onClick={e=>{e.stopPropagation();onDeleteFile(item);}}>
+                <FI name="trash-2" size={11}/>
+              </button>
+            )}
+          </div>
+        ))}
+        {!busy&&items.length===0&&(
+          <div style={{padding:'14px 16px',fontSize:12,color:'var(--muted)'}}>Empty folder</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Content Collection (CMS Mode locked tree) ───────────────────────────────
+
+function ContentCollection({gh,branch,rootPath,openPath,onOpen,onDeleteFile,onNewFile,onNewFolder,treeVersion}){
+  const[path,setPath]=useState(rootPath);
+  const[items,setItems]=useState([]);
+  const[busy,setBusy]=useState(false);
+
+  // Reset to root when branch or rootPath changes
+  useEffect(()=>{setPath(rootPath);},[branch,rootPath]);
+
+  useEffect(()=>{
+    if(!branch)return;
+    setBusy(true);
+    gh.getContents(path,branch)
+      .then(d=>{
+        const arr=Array.isArray(d)?d:[d];
+        arr.sort((a,b)=>a.type===b.type?a.name.localeCompare(b.name):a.type==='dir'?-1:1);
+        setItems(arr);
+      })
+      .catch(()=>setItems([]))
+      .finally(()=>setBusy(false));
+  },[branch,path,treeVersion]);
+
+  const rootParts=rootPath?rootPath.split('/').filter(Boolean):[];
+  const allParts=path?path.split('/').filter(Boolean):[];
+  const relParts=allParts.slice(rootParts.length);
+  const canGoUp=path!==rootPath;
+
+  function goUp(){
+    if(!canGoUp)return;
+    const p=path.split('/');p.pop();setPath(p.join('/'));
+  }
+  function goRel(i){
+    setPath([...rootParts,...relParts.slice(0,i+1)].join('/'));
+  }
+
+  return(
+    <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      <div className="breadcrumb" style={{justifyContent:'space-between'}}>
+        <div style={{display:'flex',alignItems:'center',gap:3,overflow:'hidden',minWidth:0}}>
+          <span className="bc-item" onClick={()=>setPath(rootPath)} title="Collection root">~</span>
+          {relParts.map((p,i)=>(
+            <React.Fragment key={i}>
+              <span className="bc-sep">/</span>
+              <span className="bc-item" style={{overflow:'hidden',textOverflow:'ellipsis'}} onClick={()=>goRel(i)}>{p}</span>
+            </React.Fragment>
+          ))}
+        </div>
+        <div style={{display:'flex',gap:2,flexShrink:0,marginLeft:4}}>
+          <button className="ib ib-sm" title="New folder here" onClick={()=>onNewFolder(path)}>
+            <FI name="folder-plus" size={11}/>
+          </button>
+          <button className="ib ib-sm" title="New file here" onClick={()=>onNewFile(path)}>
+            <FI name="file-plus" size={11}/>
+          </button>
+        </div>
+      </div>
+      <div className="s-scroll">
+        {canGoUp&&(
+          <div className="f-item" onClick={goUp}>
+            <FI name="corner-left-up" size={13} style={{opacity:.5}}/>
+            <span className="f-name" style={{color:'var(--muted)'}}>…</span>
+          </div>
+        )}
+        {busy&&<div style={{padding:'14px',textAlign:'center'}}><div className="spin" style={{margin:'0 auto'}}/></div>}
+        {!busy&&items.map(item=>(
+          <div key={item.path} className={`f-item${openPath===item.path?' active':''}`}
+            onClick={()=>{
+              if(item.type==='dir')setPath(item.path);
+              else if(isText(item.name)||isImg(item.name))onOpen(item);
+            }}>
+            <FI name={item.type==='dir'?'folder':isMD(item.name)?'file-text':isImg(item.name)?'image':'file'} size={13} style={{opacity:.6,flexShrink:0}}/>
+            <span className="f-name">{item.name}</span>
+            {isMD(item.name)&&<span className="f-ext">md</span>}
+            {item.type!=='dir'&&onDeleteFile&&(
+              <button className="ib ib-sm f-del" title="Delete file"
+                onClick={e=>{e.stopPropagation();onDeleteFile(item);}}>
+                <FI name="trash-2" size={11}/>
+              </button>
+            )}
+          </div>
+        ))}
+        {!busy&&items.length===0&&(
+          <div style={{padding:'14px 16px',fontSize:12,color:'var(--muted)'}}>Empty folder</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
+
+function Sidebar({gh,cfg,branch,path,setPath,openPath,onOpen,onNewBranch,onSwitchBranch,onNewFile,onNewFolder,onSettings,onTheme,theme,onDeleteFile,treeVersion}){
+  const cmsOn=!!(cfg.cmsMode&&cfg.cmsPaths&&cfg.cmsPaths.trim());
+  const cmsEntries=cmsOn?parseCmsPaths(cfg.cmsPaths):[];
+  const[cmsTab,setCmsTab]=useState(0);
+  const safeTab=Math.min(cmsTab,Math.max(0,cmsEntries.length-1));
+
+  return(
+    <>
+      <div className="s-head">
+        <div className="logo">GitGlint</div>
+        {cmsOn&&<span className="cms-badge"><FI name="edit-3" size={8}/>CMS</span>}
+        <div style={{marginLeft:'auto',display:'flex',gap:2}}>
+          <button className="ib ib-sm" onClick={onTheme} title="Toggle theme">
+            <FI name={theme==='dark'?'sun':'moon'} size={13}/>
+          </button>
+          <button className="ib ib-sm" onClick={onSettings} title="Settings">
+            <FI name="settings" size={13}/>
+          </button>
+        </div>
+      </div>
+
+      <div className="s-repo" title={`${cfg.owner}/${cfg.repo}`}>
+        <FI name="github" size={11} style={{marginRight:5,opacity:.5}}/>{cfg.owner}/{cfg.repo}
+      </div>
+
+      <div className="s-section" style={{flexShrink:0}}>
+        <div className="s-label">
+          Branch
+          <button className="ib ib-sm" onClick={onNewBranch} title="New branch"><FI name="plus" size={13}/></button>
+        </div>
+        {branch?(
+          <div className="b-item active" onClick={onSwitchBranch} title="Switch branch" style={{padding:'8px 16px'}}>
+            <div className="b-dot"/>
+            <span style={{overflow:'hidden',textOverflow:'ellipsis',flex:1}}>{branch}</span>
+            <FI name="chevron-down" size={14} style={{opacity:.5}}/>
+          </div>
+        ):(
+          <div style={{padding:'8px 16px',fontSize:12,color:'var(--muted)'}}>Loading...</div>
+        )}
+      </div>
+
+      {cmsOn?(
+        <div className="s-section" style={{flex:1,overflow:'hidden',borderBottom:'none',display:'flex',flexDirection:'column'}}>
+          <div className="s-label">Content</div>
+          {cmsEntries.length>1&&(
+            <div className="cms-tabs">
+              {cmsEntries.map((e,i)=>(
+                <button key={e.path} className={`cms-tab${i===safeTab?' on':''}`}
+                  onClick={()=>setCmsTab(i)} title={e.path}>
+                  {e.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {branch
+            ?<ContentCollection
+                key={`${branch}::${cmsEntries[safeTab]?.path}`}
+                gh={gh} branch={branch}
+                rootPath={cmsEntries[safeTab]?.path||''}
+                openPath={openPath} onOpen={onOpen}
+                onDeleteFile={onDeleteFile}
+                onNewFile={onNewFile}
+                onNewFolder={onNewFolder}
+                treeVersion={treeVersion}
+              />
+            :<div style={{padding:'14px 16px',fontSize:12,color:'var(--muted)'}}>Select a branch to browse files.</div>
+          }
+        </div>
+      ):(
+        <div className="s-section" style={{flex:1,overflow:'hidden',borderBottom:'none'}}>
+          <div className="s-label">
+            Files
+            <div style={{display:'flex',gap:2}}>
+              <button className="ib ib-sm" onClick={()=>onNewFolder(path)} title="New folder"><FI name="folder-plus" size={13}/></button>
+              <button className="ib ib-sm" onClick={()=>onNewFile(path)} title="New file"><FI name="file-plus" size={13}/></button>
+            </div>
+          </div>
+          {branch
+            ?<FileTree gh={gh} branch={branch} path={path} setPath={setPath} openPath={openPath} onOpen={onOpen} onDeleteFile={onDeleteFile} treeVersion={treeVersion}/>
+            :<div style={{padding:'14px 16px',fontSize:12,color:'var(--muted)'}}>Select a branch to browse files.</div>
+          }
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─── Editor Toolbar ───────────────────────────────────────────────────────────
+
+function Toolbar({onInsert,view,setView,onImage,isMobile}){
+  const tools=[
+    {l:'B',t:'Bold (⌘B)',b:'**',a:'**'},
+    {l:'I',t:'Italic (⌘I)',b:'*',a:'*',s:{fontStyle:'italic'}},
+    {l:'~~',t:'Strikethrough',b:'~~',a:'~~'},
+    null,
+    {l:'H1',t:'Heading 1',b:'# '},
+    {l:'H2',t:'Heading 2',b:'## '},
+    {l:'H3',t:'Heading 3',b:'### '},
+    null,
+    {i:'link',t:'Link',b:'[',a:'](url)'},
+    {i:'image',t:'Upload image',action:'image'},
+    {i:'code',t:'Inline code',b:'`',a:'`'},
+    {l:'```',t:'Code block',b:'```\n',a:'\n```'},
+    {i:'minus',t:'Divider',b:'\n---\n'},
+    null,
+    {i:'list',t:'Bullet list',b:'- '},
+    {l:'1.',t:'Numbered list',b:'1. '},
+    {i:'chevron-right',t:'Blockquote',b:'> '},
+  ];
+
+  return(
+    <div className="toolbar">
+      {tools.map((t,i)=>{
+        if(!t)return<div key={i} className="tb-sep"/>;
+        if(t.action==='image')return(
+          <button key={i} className="tb" title={t.t} onClick={onImage}><FI name="image" size={13}/></button>
+        );
+        if(t.i)return(
+          <button key={i} className="tb" title={t.t} onClick={()=>onInsert(t.b||'',t.a||'')}><FI name={t.i} size={13}/></button>
+        );
+        return(
+          <button key={i} className="tb" title={t.t} style={t.s} onClick={()=>onInsert(t.b||'',t.a||'')}>{t.l}</button>
+        );
+      })}
+      {!isMobile&&(
+        <div className="v-toggle">
+          {['edit','split','preview'].map(v=>(
+            <button key={v} className={`vb${view===v?' on':''}`} onClick={()=>setView(v)}>
+              {v.charAt(0).toUpperCase()+v.slice(1)}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Markdown Editor ──────────────────────────────────────────────────────────
+
+function Editor({file,content,setContent,isDirty,view,setView,onImage,onCommit,onClose,isMobile}){
+  const taRef=useRef(null);
+  const[cur,setCur]=useState(null);
+
+  useLayoutEffect(()=>{
+    if(cur&&taRef.current){taRef.current.selectionStart=cur.s;taRef.current.selectionEnd=cur.e;}
+    setCur(null);
+  },[cur,content]);
+
+  function ins(before,after=''){
+    const el=taRef.current;
+    if(!el)return;
+    const{text,cs,ce}=insertMD(content,el.selectionStart,el.selectionEnd,before,after);
+    setContent(text);setCur({s:cs,e:ce});el.focus();
+  }
+
+  function onKey(e){
+    if(e.key==='Tab'){e.preventDefault();ins('  ');}
+    if((e.metaKey||e.ctrlKey)&&e.key==='b'){e.preventDefault();ins('**','**');}
+    if((e.metaKey||e.ctrlKey)&&e.key==='i'){e.preventDefault();ins('*','*');}
+    if((e.metaKey||e.ctrlKey)&&e.key==='s'){e.preventDefault();onCommit();}
+  }
+
+  const html=useMemo(()=>{
+    try{return window.marked?marked.parse(content):''}catch{return''}
+  },[content]);
+
+  if(!file)return(
+    <div className="empty">
+      <FI name="feather" size={44}/>
+      <div className="empty-t">No file open</div>
+      <div className="empty-s">Pick a file from the sidebar to start editing</div>
+    </div>
+  );
+
+  const showEdit=view==='edit'||view==='split';
+  const showPreview=view==='preview'||view==='split';
+
+  return(
+    <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      <Toolbar onInsert={ins} view={view} setView={setView} onImage={onImage} isMobile={isMobile}/>
+      <div className="e-head">
+        <div className="e-path"><FI name="file-text" size={12} style={{marginRight:5,opacity:.5}}/>{file.path}</div>
+        {isDirty&&<div className="dirty" title="Unsaved changes"/>}
+        {file.isNew&&<span className="tag">new</span>}
+        <button className="btn btn-primary btn-sm" onClick={onCommit} disabled={!isDirty}>
+          <FI name="upload-cloud" size={13}/>Commit
+        </button>
+        <button className="ib" onClick={onClose} title="Close file" style={{marginLeft:2}}>
+          <FI name="x" size={15}/>
+        </button>
+      </div>
+      <div className="e-body">
+        {showEdit&&(
+          <div className={`e-pane${!showPreview?' solo':''}`}>
+            <textarea ref={taRef} className="ta" value={content}
+              onChange={e=>setContent(e.target.value)} onKeyDown={onKey}
+              spellCheck placeholder={isMD(file.name)?'# Title\n\nStart writing…':'Edit content…'}/>
+          </div>
+        )}
+        {showPreview&&(
+          <div className="p-pane">
+            {isMD(file.name)
+              ?<div className="p-inner" dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(html)}}/>
+              :<div className="p-inner"><pre style={{fontFamily:'var(--mono)',fontSize:13,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{content}</pre></div>
+            }
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Commit Modal ─────────────────────────────────────────────────────────────
+
+function CommitModal({file,branch,onClose,onCommit,busy}){
+  const[msg,setMsg]=useState(file?`Update ${file.name}`:'');
+  function submit(e){e.preventDefault();if(msg&&!busy)onCommit(msg);}
+  return(
+    <div className="m-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="m-title"><FI name="upload-cloud" size={18} style={{marginRight:8,verticalAlign:'middle'}}/>Commit changes</div>
+        <div className="fg">
+          <label className="fl">Branch</label>
+          <div style={{fontFamily:'var(--mono)',fontSize:12,padding:'8px 11px',background:'var(--bg)',borderRadius:'var(--r)',border:'1px solid var(--border)',color:'var(--muted)',display:'flex',alignItems:'center',gap:6}}>
+            <FI name="git-branch" size={12}/>{branch}
+          </div>
+        </div>
+        {file&&<div className="fg">
+          <label className="fl">File</label>
+          <div style={{fontFamily:'var(--mono)',fontSize:12,padding:'8px 11px',background:'var(--bg)',borderRadius:'var(--r)',border:'1px solid var(--border)',color:'var(--muted)'}}>{file.path}</div>
+        </div>}
+        <div className="fg">
+          <label className="fl">Commit message</label>
+          <input className="fi" value={msg} onChange={e=>setMsg(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit(e)} placeholder="Describe your changes" autoFocus/>
+        </div>
+        <div className="m-actions">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={()=>onCommit(msg)} disabled={!msg||busy}>
+            {busy?<><div className="spin"/>Committing…</>:<><FI name="check" size={14}/>Commit</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── New Branch Modal ─────────────────────────────────────────────────────────
+
+function BranchModal({branches,onClose,onCreate,busy}){
+  const[name,setName]=useState('');
+  const[from,setFrom]=useState(branches[0]?.name||'main');
+  return(
+    <div className="m-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="m-title"><FI name="git-branch" size={18} style={{marginRight:8,verticalAlign:'middle'}}/>New branch</div>
+        <div className="fg">
+          <label className="fl">Branch name</label>
+          <input className="fi" value={name} onChange={e=>setName(e.target.value.replace(/\s+/g,'-'))} placeholder="draft/my-post" autoFocus/>
+          <div className="fh">Spaces are converted to hyphens automatically.</div>
+        </div>
+        <div className="fg">
+          <label className="fl">From branch</label>
+          <select className="fi" value={from} onChange={e=>setFrom(e.target.value)}>
+            {branches.map(b=><option key={b.name} value={b.name}>{b.name}</option>)}
+          </select>
+        </div>
+        <div className="m-actions">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={()=>onCreate(name,from)} disabled={!name||busy}>
+            {busy?'Creating…':'Create Branch'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Branch Search Modal ───────────────────────────────────────────────────────
+
+function BranchSearchModal({branches, branch, onClose, onSwitch, onDeleteBranch}){
+  const [q, setQ] = useState('');
+  const filtered = branches.filter(b => b.name.toLowerCase().includes(q.toLowerCase()));
+
+  return (
+    <div className="m-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="m-title"><FI name="git-branch" size={18} style={{marginRight:8,verticalAlign:'middle'}}/>Switch Branch</div>
+        
+        <div className="fg">
+          <input className="fi" value={q} onChange={e=>setQ(e.target.value)} placeholder="Search branches..." autoFocus/>
+        </div>
+
+        <div className="s-scroll" style={{maxHeight:'40vh', margin:'0 -24px 20px', borderTop:'1px solid var(--border)', borderBottom:'1px solid var(--border)'}}>
+          {filtered.map(b=>(
+            <div key={b.name} className={`b-item${branch===b.name?' active':''}`} style={{padding: '10px 24px'}}>
+              <div className="b-dot" onClick={()=>{onSwitch(b.name); onClose();}}/>
+              <span style={{flex:1,overflow:'hidden',textOverflow:'ellipsis'}} onClick={()=>{onSwitch(b.name); onClose();}}>{b.name}</span>
+              {branch===b.name
+                ?<span style={{fontSize:10,opacity:.5,fontFamily:'var(--mono)',flexShrink:0}}>current</span>
+                :<button className="ib ib-sm" title="Delete branch" style={{flexShrink:0,opacity:.45,color:'var(--danger)'}}
+                    onClick={e=>{e.stopPropagation();onDeleteBranch(b.name);onClose();}}>
+                    <FI name="trash-2" size={12}/>
+                  </button>
+              }
+            </div>
+          ))}
+          {filtered.length === 0 && (
+            <div style={{padding:'20px', textAlign:'center', color:'var(--muted)', fontSize: 13}}>No branches found.</div>
+          )}
+        </div>
+
+        <div className="m-actions">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+  
+// ─── New File Modal ───────────────────────────────────────────────────────────
+
+function NewFileModal({basePath,onClose,onCreate}){
+  const[name,setName]=useState('');
+  const fullPath=basePath?`${basePath}/${name}`:name;
+  return(
+    <div className="m-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="m-title"><FI name="file-plus" size={18} style={{marginRight:8,verticalAlign:'middle'}}/>New file</div>
+        <div className="fg">
+          <label className="fl">File name</label>
+          <input className="fi" value={name} onChange={e=>setName(e.target.value)} placeholder="my-post.md" autoFocus
+            onKeyDown={e=>e.key==='Enter'&&name&&onCreate(fullPath)}/>
+          {basePath&&<div className="fh">Will be created in <code style={{fontFamily:'var(--mono)'}}>{basePath}/</code></div>}
+        </div>
+        <div className="m-actions">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={()=>onCreate(fullPath)} disabled={!name}>Create</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── New Folder Modal ─────────────────────────────────────────────────────────
+
+function NewFolderModal({basePath,onClose,onCreate,busy}){
+  const[name,setName]=useState('');
+  const safeName=name.replace(/\s+/g,'-').replace(/[^a-zA-Z0-9._-]/g,'');
+  const fullPath=basePath?`${basePath}/${safeName}`:safeName;
+  return(
+    <div className="m-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="m-title"><FI name="folder-plus" size={18} style={{marginRight:8,verticalAlign:'middle'}}/>New folder</div>
+        <div className="fg">
+          <label className="fl">Folder name</label>
+          <input className="fi" value={name} onChange={e=>setName(e.target.value)} placeholder="my-folder" autoFocus
+            onKeyDown={e=>e.key==='Enter'&&safeName&&onCreate(fullPath)}/>
+          {name&&safeName!==name&&<div className="fh" style={{color:'var(--accent)'}}>Will be saved as: <code style={{fontFamily:'var(--mono)'}}>{safeName}</code></div>}
+          {basePath&&<div className="fh">Will be created inside <code style={{fontFamily:'var(--mono)'}}>{basePath}/</code></div>}
+          <div className="fh" style={{marginTop:6}}>GitHub requires at least one file in a folder. A <code style={{fontFamily:'var(--mono)'}}>.gitkeep</code> will be added automatically.</div>
+        </div>
+        <div className="m-actions">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={()=>onCreate(fullPath)} disabled={!safeName||busy}>
+            {busy?<><div className="spin"/>Creating…</>:<><FI name="folder-plus" size={13}/>Create Folder</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Image Upload Modal ───────────────────────────────────────────────────────
+
+function ImageModal({gh,branch,imgPath,onClose,onInsert}){
+  const[preview,setPreview]=useState(null);
+  const[b64,setB64]=useState(null);
+  const[fname,setFname]=useState('');
+  const[alt,setAlt]=useState('');
+  const[drag,setDrag]=useState(false);
+  const[busy,setBusy]=useState(false);
+  const[err,setErr]=useState('');
+  const inputRef=useRef(null);
+
+  function loadFile(f){
+    if(!f||!f.type.startsWith('image/'))return;
+    setFname(f.name);setAlt(f.name.replace(/\.[^.]+$/,'').replace(/[-_]/g,' '));
+    const r=new FileReader();
+    r.onload=e=>{setPreview(e.target.result);setB64(e.target.result.split(',')[1]);};
+    r.readAsDataURL(f);
+  }
+
+  async function upload(){
+    setBusy(true);setErr('');
+    try{
+      const path=`${imgPath}/${fname}`;
+      await gh.uploadBinary(path,b64,`Upload image: ${fname}`,branch);
+      onInsert(`![${alt}](/${imgPath}/${fname})`);
+    }catch(ex){setErr(ex.message);}
+    finally{setBusy(false);}
+  }
+
+  return(
+    <div className="m-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="m-title"><FI name="image" size={18} style={{marginRight:8,verticalAlign:'middle'}}/>Upload image</div>
+        <div
+          className={`upload-zone${drag?' drag':''}`}
+          onClick={()=>inputRef.current?.click()}
+          onDragOver={e=>{e.preventDefault();setDrag(true);}}
+          onDragLeave={()=>setDrag(false)}
+          onDrop={e=>{e.preventDefault();setDrag(false);loadFile(e.dataTransfer.files[0]);}}
+        >
+          <input ref={inputRef} type="file" accept="image/*" style={{display:'none'}} onChange={e=>loadFile(e.target.files[0])}/>
+          {preview
+            ?<img src={preview} alt="preview" className="upload-preview"/>
+            :<div>
+              <FI name="upload-cloud" size={28} style={{opacity:.35,marginBottom:8}}/>
+              <div style={{fontSize:13,color:'var(--muted)'}}>Tap or drag an image here</div>
+              <div style={{fontSize:11,color:'var(--muted2)',marginTop:4}}>PNG, JPG, WebP, GIF, SVG, AVIF</div>
+            </div>
+          }
+        </div>
+
+        {b64&&<>
+          <div className="fg" style={{marginTop:14}}>
+            <label className="fl">Alt text</label>
+            <input className="fi" value={alt} onChange={e=>setAlt(e.target.value)}/>
+          </div>
+          <div style={{fontSize:11,color:'var(--muted)',marginBottom:14}}>
+            Uploads to: <code style={{fontFamily:'var(--mono)'}}>{imgPath}/{fname}</code>
+          </div>
+        </>}
+
+        {err&&<div className="err-msg">{err}</div>}
+
+        <div className="m-actions">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={upload} disabled={!b64||busy}>
+            {busy?<><div className="spin"/>Uploading…</>:<><FI name="upload-cloud" size={13}/>Upload &amp; Insert</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Settings Modal ───────────────────────────────────────────────────────────
+
+function SettingsModal({cfg,onSave,onClose,onDisconnect}){
+  const[pat,setPat]=useState(cfg.pat);
+  const[owner,setOwner]=useState(cfg.owner);
+  const[repo,setRepo]=useState(cfg.repo);
+  const[imgPath,setImgPath]=useState(cfg.imgPath||'public/images');
+  const[cmsMode,setCmsMode]=useState(cfg.cmsMode||false);
+  const[cmsPaths,setCmsPaths]=useState(cfg.cmsPaths||'');
+  return(
+    <div className="m-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="m-title"><FI name="settings" size={18} style={{marginRight:8,verticalAlign:'middle'}}/>Settings</div>
+        <div className="fg">
+          <label className="fl">GitHub PAT</label>
+          <input className="fi" type="password" value={pat} onChange={e=>setPat(e.target.value)}/>
+        </div>
+        <div className="row">
+          <div className="fg col">
+            <label className="fl">Owner</label>
+            <input className="fi" value={owner} onChange={e=>setOwner(e.target.value)}/>
+          </div>
+          <div className="fg" style={{flex:2}}>
+            <label className="fl">Repository</label>
+            <input className="fi" value={repo} onChange={e=>setRepo(e.target.value)}/>
+          </div>
+        </div>
+        <div className="fg">
+          <label className="fl">Image path</label>
+          <input className="fi" value={imgPath} onChange={e=>setImgPath(e.target.value)}/>
+        </div>
+
+        <hr className="sep"/>
+
+        <div className="fg" style={{marginBottom:cmsMode?10:0}}>
+          <div className="sw-row" onClick={()=>setCmsMode(v=>!v)}>
+            <div>
+              <div style={{fontSize:13,fontWeight:500,display:'flex',alignItems:'center',gap:7}}>
+                <FI name="edit-3" size={13} style={{opacity:.6}}/>CMS Mode
+              </div>
+              <div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>Show only your content folders, hide everything else</div>
+            </div>
+            <label className="sw" onClick={e=>e.stopPropagation()}>
+              <input type="checkbox" checked={cmsMode} onChange={e=>setCmsMode(e.target.checked)}/>
+              <div className="sw-track"/>
+              <div className="sw-thumb"/>
+            </label>
+          </div>
+        </div>
+        {cmsMode&&(
+          <div className="fg">
+            <label className="fl">Content paths</label>
+            <input className="fi" value={cmsPaths} onChange={e=>setCmsPaths(e.target.value)}
+              placeholder="Posts:content/posts, Pages:content/pages" autoFocus={cmsMode}/>
+            <div className="fh">Comma-separated paths. Optionally prefix with a label: <code style={{fontFamily:'var(--mono)'}}>Posts:content/posts, content/drafts</code>. Labels appear as tabs when you have multiple paths.</div>
+          </div>
+        )}
+
+        <div className="m-actions">
+          <button className="btn btn-ghost" style={{color:'var(--danger)',marginRight:'auto'}} onClick={onDisconnect}>Disconnect</button>
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={()=>onSave({pat,owner,repo,imgPath,cmsMode,cmsPaths})}>Save</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Delete Confirm Modal ─────────────────────────────────────────────────────
+
+function DeleteConfirmModal({title,message,itemLabel,onClose,onConfirm,busy}){
+  return(
+    <div className="m-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="m-title" style={{color:'var(--danger)'}}><FI name="trash-2" size={18} style={{marginRight:8,verticalAlign:'middle'}}/>{title}</div>
+        <p style={{color:'var(--muted)',fontSize:13,marginBottom:8}}>{message}</p>
+        {itemLabel&&<div style={{fontFamily:'var(--mono)',fontSize:12,padding:'8px 11px',background:'var(--bg)',borderRadius:'var(--r)',border:'1px solid var(--border)',color:'var(--text)',marginBottom:20,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{itemLabel}</div>}
+        <div className="m-actions">
+          <button className="btn btn-ghost" onClick={onClose} autoFocus>Cancel</button>
+          <button className="btn btn-primary" style={{background:'var(--danger)'}} onClick={onConfirm} disabled={busy}>
+            {busy?<><div className="spin"/>Deleting…</>:<><FI name="trash-2" size={13}/>Delete</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Image Viewer ─────────────────────────────────────────────────────────────
+
+function ImgViewer({file,cfg,branch}){
+  const url=rawURL(cfg.owner,cfg.repo,branch,file.path);
+  return(
+    <div style={{flex:1,overflow:'auto',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:14,padding:32}}>
+      <img src={url} alt={file.name} style={{maxWidth:'100%',maxHeight:'70vh',borderRadius:'var(--r)',boxShadow:'var(--shadow)'}}/>
+      <div style={{fontFamily:'var(--mono)',fontSize:11,color:'var(--muted)'}}>{file.path}</div>
+      <a className="btn btn-ghost btn-sm" href={url} target="_blank" rel="noopener">
+        <FI name="external-link" size={13}/>Open original
+      </a>
+    </div>
+  );
+}
+
+// ─── App ──────────────────────────────────────────────────────────────────────
+
+const CFG_KEY='folio_v1';
+
+function App(){
+  const[cfg,setCfg]=useState(()=>LS.get(CFG_KEY));
+  const[gh,setGH]=useState(()=>cfg?mkGH(cfg.pat,cfg.owner,cfg.repo):null);
+  const[branches,setBranches]=useState([]);
+  const[branch,setBranch]=useState(null);
+  const[path,setPath]=useState('');
+  const[file,setFile]=useState(null);   // {path,name,sha,isNew?,isImage?}
+  const[content,setContent]=useState('');
+  const[saved,setSaved]=useState('');   // original committed content
+  const[view,setView]=useState('edit'); // edit|split|preview
+  const[mTab,setMTab]=useState('write'); // write|preview
+  const[drawer,setDrawer]=useState(false);
+  const[modal,setModal]=useState(null);
+  const[newFilePath,setNewFilePath]=useState('');
+  const[busy,setBusy]=useState({branches:false,file:false,save:false});
+  const[toast,setToast]=useState(null);
+  const[theme,setTheme]=useState(()=>LS.get('folio_theme')||'light');
+  const[isMobile,setIsMobile]=useState(()=>window.innerWidth<768);
+
+  const[deleteTarget,setDeleteTarget]=useState(null); // {type:'file'|'branch', item}
+  const[treeVersion,setTreeVersion]=useState(0);
+  const[newFolderPath,setNewFolderPath]=useState('');
+  const isDirty=content!==saved;
+
+  // Mobile detection
+  useEffect(()=>{
+    const h=()=>setIsMobile(window.innerWidth<768);
+    window.addEventListener('resize',h);return()=>window.removeEventListener('resize',h);
+  },[]);
+
+  // Theme
+  useEffect(()=>{
+    document.documentElement.dataset.theme=theme;
+    LS.set('folio_theme',theme);
+    document.getElementById('theme-color-meta').content=theme==='dark'?'#131210':'#F5F3EE';
+  },[theme]);
+
+  // Load branches
+  useEffect(()=>{
+    if(!gh)return;
+    setBusy(b=>({...b,branches:true}));
+    gh.getBranches()
+      .then(data=>{
+        setBranches(data);
+        const def=data.find(b=>b.name==='main')||data.find(b=>b.name==='master')||data[0];
+        if(def)setBranch(def.name);
+      })
+      .catch(e=>toast_show(`Failed to load branches: ${e.message}`,'error'))
+      .finally(()=>setBusy(b=>({...b,branches:false})));
+  },[gh]);
+
+  function toast_show(message,type='info'){
+    setToast({message,type,id:Date.now()});
+  }
+
+  function saveCfg(c){
+    LS.set(CFG_KEY,c);setCfg(c);
+    const g=mkGH(c.pat,c.owner,c.repo);
+    setGH(g);setModal(null);
+  }
+
+  function switchBranch(b){
+    if(b === branch) return; // Do nothing if clicking the active branch
+    if(isDirty&&!confirm('You have unsaved changes. Switch branch?'))return;
+    // Added setPath('') to prevent 404s on the file tree when switching
+    setBranch(b);setPath('');setFile(null);setContent('');setSaved('');
+  }
+
+  async function openFile(item){
+    if(isDirty&&!confirm('Discard unsaved changes?'))return;
+    if(isImg(item.name)){
+      setFile({...item,isImage:true});setContent('');setSaved('');
+      setMTab('write');setDrawer(false);return;
+    }
+    setBusy(b=>({...b,file:true}));
+    try{
+      const d=await gh.getContents(item.path,branch);
+      const txt=b64dec(d.content);
+      setFile({...item,sha:d.sha});setContent(txt);setSaved(txt);
+      setMTab('write');setDrawer(false);
+      if(isMobile&&view==='split')setView('edit');
+    }catch(e){toast_show(`Error opening file: ${e.message}`,'error');}
+    finally{setBusy(b=>({...b,file:false}));}
+  }
+
+  function bumpTree(){setTreeVersion(v=>v+1);}
+
+  function closeFile(){
+    if(isDirty&&!confirm('Discard unsaved changes?'))return;
+    setFile(null);setContent('');setSaved('');
+  }
+
+  function newFile(basePath){
+    setNewFilePath(basePath||path);setModal('newfile');
+  }
+
+  function newFolder(basePath){
+    setNewFolderPath(basePath||path);setModal('newfolder');
+  }
+
+  function createFile(fullPath){
+    const name=fullPath.split('/').pop();
+    const def=isMD(name)?defaultFrontmatter(name):'';
+    setFile({path:fullPath,name,sha:null,isNew:true});
+    setContent(def);setSaved('');
+    setModal(null);setMTab('write');setDrawer(false);
+  }
+
+  async function createFolder(folderPath){
+    setBusy(b=>({...b,save:true}));
+    try{
+      const keepPath=`${folderPath}/.gitkeep`;
+      await gh.saveFile(keepPath,'Create folder',''/*empty*/,null,branch);
+      setModal(null);bumpTree();
+      toast_show(`Created folder "${folderPath.split('/').pop()}" ✓`,'success');
+    }catch(e){toast_show(`Failed to create folder: ${e.message}`,'error');}
+    finally{setBusy(b=>({...b,save:false}));}
+  }
+
+  async function commit(msg){
+    setBusy(b=>({...b,save:true}));
+    try{
+      const res=await gh.saveFile(file.path,msg,content,file.sha||null,branch);
+      const newSha=res.content?.sha;
+      setFile(f=>({...f,sha:newSha,isNew:false}));setSaved(content);
+      setModal(null);toast_show('Committed ✓','success');
+    }catch(e){toast_show(`Commit failed: ${e.message}`,'error');}
+    finally{setBusy(b=>({...b,save:false}));}
+  }
+
+  async function deleteFile(){
+    const item=deleteTarget?.item;
+    if(!item)return;
+    setBusy(b=>({...b,save:true}));
+    try{
+      await gh.deleteFile(item.path,`Delete ${item.name}`,item.sha,branch);
+      if(file?.path===item.path){setFile(null);setContent('');setSaved('');}
+      setDeleteTarget(null);setModal(null);bumpTree();
+      toast_show(`Deleted "${item.name}" ✓`,'success');
+    }catch(e){toast_show(`Delete failed: ${e.message}`,'error');}
+    finally{setBusy(b=>({...b,save:false}));}
+  }
+
+  async function deleteBranch(){
+    const name=deleteTarget?.item?.name;
+    if(!name)return;
+    setBusy(b=>({...b,save:true}));
+    try{
+      await gh.deleteBranch(name);
+      const updated=branches.filter(b=>b.name!==name);
+      setBranches(updated);
+      setDeleteTarget(null);setModal(null);
+      toast_show(`Deleted branch "${name}" ✓`,'success');
+    }catch(e){toast_show(`Delete failed: ${e.message}`,'error');}
+    finally{setBusy(b=>({...b,save:false}));}
+  }
+
+  async function createBranch(name,from){
+    try{
+      const ref=await gh.getRef(from);
+      await gh.createBranch(name,ref.object.sha);
+      let updated=await gh.getBranches();
+      
+      // Inject the new branch instantly if GitHub's API hasn't returned it yet
+      if(!updated.some(b=>b.name===name)){
+        updated = [{name}, ...updated];
+      }
+      
+      setBranches(updated);
+      setBranch(name); // Switch visually without clearing unsaved file work
+      setModal(null);
+      toast_show(`Switched to new branch "${name}"`,'success');
+    }catch(e){toast_show(`Failed: ${e.message}`,'error');}
+  }
+    
+
+  function insertImage(md){
+    setContent(c=>c+(c.endsWith('\n')?'':'\n')+md+'\n');
+    setModal(null);toast_show('Image uploaded & inserted ✓','success');
+  }
+
+  if(!cfg)return<Setup onSave={c=>{LS.set(CFG_KEY,c);setCfg(c);setGH(mkGH(c.pat,c.owner,c.repo));}}/>;
+
+  const sb=(
+    <Sidebar
+      gh={gh} cfg={cfg} branch={branch}
+      path={path} setPath={setPath}
+      openPath={file?.path} onOpen={openFile}
+      onNewBranch={()=>setModal('branch')}
+      onSwitchBranch={()=>setModal('switch-branch')}
+      onNewFile={newFile}
+      onNewFolder={newFolder}
+      onSettings={()=>setModal('settings')}
+      onTheme={()=>setTheme(t=>t==='dark'?'light':'dark')}
+      theme={theme}
+      onDeleteFile={item=>{setDeleteTarget({type:'file',item});setModal('delete-confirm');}}
+      treeVersion={treeVersion}
+    />
+  );
+
+  const mobileView=mTab==='preview'?'preview':'edit';
+
+  return(
+    <>
+      {/* Mobile header */}
+      <div className="m-head">
+        {file?(
+          <>
+            <button className="ib" onClick={closeFile} title="Close file"><FI name="x" size={18}/></button>
+            <span style={{fontFamily:'var(--mono)',fontSize:11,color:'var(--muted)',overflow:'hidden',textOverflow:'ellipsis',flex:1,minWidth:0}}>{file.name}</span>
+          </>
+        ):(
+          <>
+            <button className="ib" onClick={()=>setDrawer(true)}><FI name="menu" size={18}/></button>
+            <div className="logo" style={{fontSize:16}}>GitGlint</div>
+            {branch&&<span onClick={()=>setDrawer(true)} style={{fontFamily:'var(--mono)',fontSize:11,color:'var(--muted)',overflow:'hidden',textOverflow:'ellipsis',maxWidth:110,cursor:'pointer'}}>{branch}</span>}
+          </>
+        )}
+        <div style={{marginLeft:'auto',display:'flex',gap:6,alignItems:'center'}}>
+          {isDirty&&(
+            <button className="m-commit" onClick={()=>setModal('commit')}>
+              <FI name="upload-cloud" size={13}/>Commit
+            </button>
+          )}
+          <button className="ib" onClick={()=>setTheme(t=>t==='dark'?'light':'dark')}><FI name={theme==='dark'?'sun':'moon'} size={16}/></button>
+          <button className="ib" onClick={()=>setModal('settings')}><FI name="settings" size={16}/></button>
+        </div>
+      </div>
+
+      <div className="layout">
+        {/* Desktop sidebar */}
+        <div className="sidebar">{sb}</div>
+
+        {/* Main */}
+        <div className="main">
+          {busy.file
+            ?<div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center'}}><div className="spin" style={{width:24,height:24}}/></div>
+            :file?.isImage
+              ?<ImgViewer file={file} cfg={cfg} branch={branch}/>
+              :<Editor
+                file={file} content={content} setContent={setContent}
+                isDirty={isDirty}
+                view={isMobile?mobileView:view}
+                setView={setView}
+                onImage={()=>setModal('image')}
+                onCommit={()=>setModal('commit')}
+                onClose={closeFile}
+                isMobile={isMobile}
+              />
+          }
+        </div>
+      </div>
+
+      {/* Mobile drawer */}
+      <div className={`dr-overlay${drawer?' on':''}`} onClick={()=>setDrawer(false)}/>
+      <div className={`drawer${drawer?' on':''}`}>{sb}</div>
+
+      {/* Bottom nav */}
+      <div className="bnav">
+        <div className="bnav-inner">
+          <button className={`bnav-btn${drawer?' on':''}`} onClick={()=>{setDrawer(true);}}>
+            <FI name="folder" size={20}/> Files
+          </button>
+          <button className={`bnav-btn${mTab==='write'&&!drawer?' on':''}`} onClick={()=>{setMTab('write');setDrawer(false);}}>
+            <FI name="edit-2" size={20}/> Write
+          </button>
+          <button className={`bnav-btn${mTab==='preview'&&!drawer?' on':''}`} onClick={()=>{setMTab('preview');setDrawer(false);}}>
+            <FI name="eye" size={20}/> Preview
+          </button>
+        </div>
+      </div>
+
+      {/* Commit FAB — shows when dirty */}
+      {isDirty&&(
+        <button className="fab" onClick={()=>setModal('commit')} title="Commit (⌘S)">
+          <FI name="upload-cloud" size={20}/>
+        </button>
+      )}
+
+      {/* Modals */}
+      {modal==='switch-branch'&&<BranchSearchModal branches={branches} branch={branch} onClose={()=>setModal(null)} onSwitch={switchBranch} onDeleteBranch={name=>{setDeleteTarget({type:'branch',item:{name}});setModal('delete-confirm');}}/>}
+      {modal==='commit'&&<CommitModal file={file} branch={branch} onClose={()=>setModal(null)} onCommit={commit} busy={busy.save}/>}
+      {modal==='branch'&&<BranchModal branches={branches} onClose={()=>setModal(null)} onCreate={createBranch} busy={false}/>}
+      {modal==='newfile'&&<NewFileModal basePath={newFilePath} onClose={()=>setModal(null)} onCreate={createFile}/>}
+      {modal==='newfolder'&&<NewFolderModal basePath={newFolderPath} onClose={()=>setModal(null)} onCreate={createFolder} busy={busy.save}/>}
+      {modal==='image'&&<ImageModal gh={gh} branch={branch} imgPath={cfg.imgPath||'public/images'} onClose={()=>setModal(null)} onInsert={insertImage}/>}
+      {modal==='settings'&&<SettingsModal cfg={cfg} onSave={saveCfg} onClose={()=>setModal(null)} onDisconnect={()=>{LS.del(CFG_KEY);setCfg(null);setGH(null);setModal(null);setBranches([]);setBranch(null);setFile(null);}}/>}
+      {modal==='delete-confirm'&&deleteTarget&&(
+        <DeleteConfirmModal
+          title={deleteTarget.type==='file'?'Delete file':'Delete branch'}
+          message={deleteTarget.type==='file'
+            ?'This will permanently delete the file from the repository. This cannot be undone.'
+            :'This will permanently delete the branch. This cannot be undone.'}
+          itemLabel={deleteTarget.type==='file'?deleteTarget.item.path:deleteTarget.item.name}
+          onClose={()=>{setModal(null);setDeleteTarget(null);}}
+          onConfirm={deleteTarget.type==='file'?deleteFile:deleteBranch}
+          busy={busy.save}
+        />
+      )}
+
+      {toast&&<Toast key={toast.id} message={toast.message} type={toast.type} onDone={()=>setToast(null)}/>}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+
+<script>
+// ─── PWA Setup ────────────────────────────────────────────────────────────────
+
+const manifest = {
+  name: 'GitGlint — Git CMS',
+  short_name: 'GitGlint',
+  description: 'Git-based markdown content editor',
+  start_url: './',
+  display: 'standalone',
+  orientation: 'any',
+  background_color: '#F5F3EE',
+  theme_color: '#C06B2A',
+  icons: [{
+    src: "data:image/svg+xml," + encodeURIComponent(`
+      <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'>
+        <rect width='512' height='512' rx='112' fill='%23C06B2A'/>
+        <text x='96' y='380' font-family='Georgia,serif' font-size='320' font-style='italic' font-weight='300' fill='%23fff' opacity='.9'>f</text>
+      </svg>`),
+    sizes: 'any',
+    type: 'image/svg+xml',
+    purpose: 'any maskable'
+  }]
+};
+
+const mblob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+document.getElementById('pwa-manifest').href = URL.createObjectURL(mblob);
+
+// Configure marked
+if (window.marked) {
+  marked.setOptions({ breaks: true, gfm: true });
+}
+</script>
+</body>
+</html>
