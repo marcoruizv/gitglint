@@ -148,7 +148,8 @@ All loaded from CDN — no local install required.
 
 ---
 
-​🤖 Meta
+## Meta 🤖
+
 ​GitGlint was built as an experiment in AI-collaborative development. The core logic and architecture were co-authored with AI to demonstrate a high-velocity, single-file deployment workflow. It is provided as-is, representing a "frozen" moment of that collaboration. 
 
 This is a tool built using a LLM, all in a chat-interface, for personal use but making it public in case anyone wants to use it.
